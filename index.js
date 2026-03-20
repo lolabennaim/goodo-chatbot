@@ -1,7 +1,11 @@
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 const app = express();
 app.use(cors());
+
+// Sert les images statiques depuis le dossier /images
+app.use('/images', express.static(path.join(__dirname, 'images')));
 
 app.get('/chatbot/products', async (req, res) => {
   try {
