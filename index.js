@@ -4,8 +4,8 @@ const path = require('path');
 const app = express();
 app.use(cors());
 
-// Sert les images statiques depuis le dossier /images
-app.use('/images', express.static(path.join(__dirname, 'images')));
+// Sert les fichiers statiques depuis la racine du repo
+app.use(express.static(path.join(__dirname)));
 
 app.get('/chatbot/products', async (req, res) => {
   try {
