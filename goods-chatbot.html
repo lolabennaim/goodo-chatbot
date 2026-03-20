@@ -477,7 +477,6 @@ async function send(){
       showProductCards(results);
       setTimeout(()=>{
         msg("Tu vois quelque chose qui t'intéresse ? Clique sur un produit pour le voir sur la boutique 👆","bot","thinking",800);
-        setTimeout(()=>restart(),4000);
       },600);
     } else {
       msg("Hmm, j'ai pas trouvé de produit exact pour ça 😅 Essaie avec d'autres mots, ou jette un œil au catalogue complet !","bot","thinking",0);
@@ -497,7 +496,6 @@ async function send(){
       showProductCards(results);
       setTimeout(()=>{
         msg("Clique sur un produit pour l'ouvrir sur la boutique et configurer ton marquage 👆","bot","thinking",800);
-        setTimeout(()=>restart(),4000);
       },600);
     } else {
       msg("Hmm, pas de résultat exact pour ça 😅 Essaie autrement ou parcoure le catalogue !","bot","thinking",0);
