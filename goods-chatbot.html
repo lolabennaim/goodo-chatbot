@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GOODS — Goodo</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--black:#0f0f0f;--white:#fafaf8;--cream:#f5f2ec;--border:#e0ddd8;--muted:#888;--radius:18px}
+body{font-family:'DM Sans',sans-serif;background:var(--cream);display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px}
+
+.wrap{
+  width:100%;max-width:460px;background:var(--white);
+  border-radius:24px;box-shadow:0 8px 60px rgba(0,0,0,.10);
+  overflow:hidden;display:flex;flex-direction:column;height:680px;
+  position:relative;
+}
+
+.hdr{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;background:var(--white);}
+.hdr-name{font-weight:600;font-size:15px;color:var(--black)}
+.hdr-sub{font-size:12px;color:var(--muted);font-weight:300}
+.dot{width:8px;height:8px;background:#4ade80;border-radius:50%;margin-left:auto;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+.msgs{flex:1;overflow-y:auto;padding:18px 16px 18px 16px;display:flex;flex-direction:column;gap:10px;scroll-behavior:smooth;}
+.msgs::-webkit-scrollbar{width:4px}
+.msgs::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+
+.msg{display:flex;animation:up .3s ease forwards;opacity:0}
+@keyframes up{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.msg.bot{align-self:flex-start;max-width:80%}
+.msg.user{align-self:flex-end;max-width:75%}
+.bbl{padding:11px 15px;border-radius:var(--radius);font-size:13.5px;line-height:1.55}
+.bot .bbl{background:#f0ede7;color:var(--black);border-bottom-left-radius:4px}
+.user .bbl{background:var(--black);color:var(--white);border-bottom-right-radius:4px}
+
+.choices{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;animation:up .4s ease .1s forwards;opacity:0}
+.cbtn{background:transparent;border:1.5px solid var(--border);border-radius:100px;padding:7px 13px;font-size:12.5px;font-family:'DM Sans',sans-serif;color:var(--black);cursor:pointer;transition:all .2s}
+.cbtn:hover{background:var(--black);color:var(--white);border-color:var(--black)}
+
+.typing-row{display:flex;align-self:flex-start}
+.ti{display:flex;gap:4px;padding:11px 14px;background:#f0ede7;border-radius:var(--radius);border-bottom-left-radius:4px}
+.ti span{width:6px;height:6px;background:var(--muted);border-radius:50%;animation:bounce 1.2s infinite}
+.ti span:nth-child(2){animation-delay:.2s}
+.ti span:nth-child(3){animation-delay:.4s}
+@keyframes bounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-5px)}}
+
+/* Barre du bas */
+.bottom{
+  border-top:1px solid var(--border);
+  background:var(--white);
+  padding:12px 14px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  position:relative;
+  flex-shrink:0;
+}
+
+/* Goodo flottant AU-DESSUS du bouton send, détouré */
+#goodo-char{
+  position:absolute;
+  bottom:calc(100% - 4px);
+  right:10px;
+  width:72px;
+  pointer-events:none;
+  z-index:10;
+}
+#goodo-char img{
+  width:100%;
+  height:auto;
+  display:block;
+  transition:opacity .2s ease, transform .25s ease;
+}
+#goodo-char img.switching{
+  opacity:0;
+  transform:translateY(6px) scale(0.92);
+}
+
+.inp{flex:1;border:1.5px solid var(--border);border-radius:100px;padding:9px 15px;font-family:'DM Sans',sans-serif;font-size:13.5px;color:var(--black);background:var(--cream);outline:none;transition:border-color .2s}
+.inp:focus{border-color:var(--black)}
+.inp::placeholder{color:var(--muted)}
+.sbtn{width:37px;height:37px;background:var(--black);border:none;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:opacity .2s;flex-shrink:0}
+.sbtn:hover{opacity:.75}
+.sbtn svg{width:14px;height:14px;fill:none;stroke:white;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.cta{background:var(--black);color:var(--white);border-radius:14px;padding:13px;font-size:13px;line-height:1.5}
+.cta a{display:inline-block;margin-top:8px;color:var(--white);font-weight:500;text-decoration:underline;text-underline-offset:3px}
+
+/* Cartes produits */
+.product-cards{display:flex;flex-direction:column;gap:8px;margin-top:6px;animation:up .4s ease .1s forwards;opacity:0}
+.pcard{
+  background:var(--cream);border:1.5px solid var(--border);
+  border-radius:14px;padding:10px 13px;
+  display:flex;align-items:center;gap:10px;
+  cursor:pointer;transition:all .2s;
+}
+.pcard:hover{border-color:var(--black);background:var(--white)}
+.pcard-emoji{font-size:22px;flex-shrink:0}
+.pcard-info{flex:1;min-width:0}
+.pcard-name{font-size:13px;font-weight:500;color:var(--black);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pcard-meta{font-size:11.5px;color:var(--muted);margin-top:2px}
+.pcard-price{font-size:12px;font-weight:500;color:var(--black);flex-shrink:0;text-align:right}
+.pcard-price small{display:block;font-size:10.5px;color:var(--muted);font-weight:300}
+.no-results{padding:11px 15px;border-radius:var(--radius);font-size:13.5px;line-height:1.55;background:#f0ede7;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hdr">
+    <div>
+      <div class="hdr-name">Goodo 🤙</div>
+      <div class="hdr-sub">Ton assistant merch GOODS</div>
+    </div>
+    <div class="dot"></div>
+  </div>
+
+  <div class="msgs" id="msgs"></div>
+
+  <div class="bottom">
+    <div id="goodo-char">
+      <img id="goodo-img" src="https://i.imgur.com/placeholder.png" alt="Goodo"
+        onerror="this.style.display='none'">
+    </div>
+    <input class="inp" id="inp" placeholder="Ex: je cherche une trousse léopard…" autocomplete="off">
+    <button class="sbtn" onclick="send()">
+      <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+    </button>
+  </div>
+</div>
+
+<script>
+// ─────────────────────────────────────────────
+// CONFIG — Railway URL (swap quand dispo)
+// ─────────────────────────────────────────────
+const RAILWAY_URL = null; // ex: "https://goodo-chatbot-production.up.railway.app"
+const USE_RAILWAY = !!RAILWAY_URL;
+
+// ─────────────────────────────────────────────
+// CATALOGUE EN DUR (fallback jusqu'au deploy Railway)
+// ─────────────────────────────────────────────
+const CATALOG = [
+  // Trousses
+  {id:"t01",name:"Trousse Léopard",emoji:"🐆",category:"trousse",colors:["léopard","beige","marron"],usage:["beauté","cosmétique","kit"],price_from:4.50,price_label:"à partir de 4,50€",handle:"trousse-leopard"},
+  {id:"t02",name:"Trousse Zippée Noire",emoji:"🖤",category:"trousse",colors:["noir","black"],usage:["beauté","kit","presse","gifting"],price_from:3.80,price_label:"à partir de 3,80€",handle:"trousse-noire"},
+  {id:"t03",name:"Trousse Transparente",emoji:"🔍",category:"trousse",colors:["transparent","clair"],usage:["beauté","événement","kit"],price_from:3.20,price_label:"à partir de 3,20€",handle:"trousse-transparente"},
+
+  // Tote bags
+  {id:"b01",name:"Tote Bag Canvas Naturel",emoji:"🛍️",category:"tote bag",colors:["naturel","beige","écru"],usage:["lifestyle","lancement","événement","communauté"],price_from:2.90,price_label:"à partir de 2,90€",handle:"tote-bag-canvas"},
+  {id:"b02",name:"Tote Bag Noir Épais",emoji:"🖤",category:"tote bag",colors:["noir","black"],usage:["lifestyle","premium","lancement"],price_from:3.40,price_label:"à partir de 3,40€",handle:"tote-bag-noir"},
+
+  // Mugs
+  {id:"m01",name:"Mug Céramique 330ml",emoji:"☕",category:"mug",colors:["blanc","white","naturel"],usage:["café","food","hospitality","bureau"],price_from:5.20,price_label:"à partir de 5,20€",handle:"mug-ceramique"},
+  {id:"m02",name:"Mug Thermos Inox",emoji:"🔥",category:"mug",colors:["argent","noir","inox"],usage:["café","food","événement","premium"],price_from:8.90,price_label:"à partir de 8,90€",handle:"mug-thermos"},
+
+  // Stylos
+  {id:"s01",name:"Stylo Bille Premium",emoji:"✒️",category:"stylo",colors:["noir","blanc","bleu"],usage:["bureau","hôtel","événement","gifting"],price_from:1.20,price_label:"à partir de 1,20€",handle:"stylo-bille"},
+  {id:"s02",name:"Stylo Bambou Éco",emoji:"🌿",category:"stylo",colors:["naturel","bambou","vert"],usage:["éco","événement","lancement"],price_from:1.50,price_label:"à partir de 1,50€",handle:"stylo-bambou"},
+
+  // Carnets
+  {id:"c01",name:"Carnet A5 Couverture Souple",emoji:"📓",category:"carnet",colors:["noir","blanc","kraft"],usage:["bureau","premium","gifting","lancement"],price_from:4.20,price_label:"à partir de 4,20€",handle:"carnet-a5"},
+
+  // T-shirts
+  {id:"ts01",name:"T-shirt Unisexe Coton Bio",emoji:"👕",category:"t-shirt",colors:["blanc","noir","gris","beige"],usage:["mode","événement","communauté","merch"],price_from:9.50,price_label:"à partir de 9,50€",handle:"tshirt-coton-bio"},
+
+  // Casquettes
+  {id:"ca01",name:"Casquette 6 Panneaux",emoji:"🧢",category:"casquette",colors:["noir","blanc","marine","beige"],usage:["mode","événement","communauté","merch"],price_from:6.80,price_label:"à partir de 6,80€",handle:"casquette-6-panneaux"},
+
+  // Stickers
+  {id:"st01",name:"Stickers Vinyle Die-Cut",emoji:"🏷️",category:"sticker",colors:["tous"],usage:["packaging","lancement","événement","communauté"],price_from:0.30,price_label:"à partir de 0,30€",handle:"stickers-vinyle"},
+
+  // Tapis de souris
+  {id:"tp01",name:"Tapis de Souris XXL",emoji:"🖱️",category:"tapis",colors:["noir","custom"],usage:["bureau","gaming","événement"],price_from:7.50,price_label:"à partir de 7,50€",handle:"tapis-souris-xxl"},
+
+  // Bouteilles
+  {id:"bo01",name:"Gourde Inox 500ml",emoji:"💧",category:"gourde",colors:["noir","blanc","rose","bleu"],usage:["sport","événement","éco","premium"],price_from:9.90,price_label:"à partir de 9,90€",handle:"gourde-inox"},
+];
+
+// ─────────────────────────────────────────────
+// DÉLAIS & RECS (identiques à l'original)
+// ─────────────────────────────────────────────
+const DELAYS={
+  "Sérigraphie":"8–10 jours ouvrés",
+  "Broderie":"10–12 jours ouvrés",
+  "Transfert numérique":"6–8 jours ouvrés",
+  "Laser / gravure":"7–9 jours ouvrés",
+  "Impression UV":"7–9 jours ouvrés"
+};
+const RECS={
+  food:{label:"Food & Café",products:["Mug céramique ou thermos","Tote bag canvas","Stickers vinyle pour packaging","Tablier personnalisé"]},
+  beauté:{label:"Beauté & Bien-être",products:["Trousse zippée","Miroir de poche","Tote bag premium","Carnet / journal"]},
+  lifestyle:{label:"Lifestyle & DNVB",products:["T-shirt coton bio","Tote bag","Stickers","Casquette brodée"]},
+  hospitality:{label:"Hôtel & Restaurant",products:["Stylos gravés","Carnets A5","Tote bag","Mug ou thermos"]},
+  textile:{label:"Textile & Mode",products:["T-shirts","Casquettes","Tote bags","Stickers die-cut"]},
+  autre:{label:"ta marque",products:["Tote bag","Mug","Stickers","T-shirt"]}
+};
+
+let state={sector:null,qty:null};
+
+// ─────────────────────────────────────────────
+// RECHERCHE PRODUIT
+// ─────────────────────────────────────────────
+
+// Fetche depuis Railway OU utilise le catalogue local
+async function fetchProducts(){
+  if(!USE_RAILWAY) return CATALOG;
+  try{
+    const r=await fetch(RAILWAY_URL+"/chatbot/products");
+    if(!r.ok) throw new Error("HTTP "+r.status);
+    return await r.json();
+  }catch(e){
+    console.warn("Railway indispo, fallback catalogue local",e);
+    return CATALOG;
+  }
+}
+
+// Score de pertinence d'un produit par rapport à une query
+function scoreProduct(p, tokens){
+  let score=0;
+  const fields=[
+    p.name.toLowerCase(),
+    p.category.toLowerCase(),
+    ...(p.colors||[]).map(c=>c.toLowerCase()),
+    ...(p.usage||[]).map(u=>u.toLowerCase()),
+  ];
+  for(const t of tokens){
+    for(const f of fields){
+      if(f.includes(t)) score+=f===p.category.toLowerCase()?3:2;
+    }
+  }
+  return score;
+}
+
+// Détecte si la query ressemble à une recherche produit
+function isProductSearch(query){
+  const triggers=["cherche","veux","voudrais","besoin","trousse","mug","tote","bag","t-shirt","casquette","stylo","carnet","gourde","sticker","tapis","bouteille","produit","article","idée cadeau","cadeau","kit","packaging"];
+  const q=query.toLowerCase();
+  return triggers.some(t=>q.includes(t));
+}
+
+// Tokenise la query pour le scoring
+function tokenize(query){
+  const stopwords=["je","un","une","des","le","la","les","de","du","pour","avec","en","au","aux","et","ou","sur","dans","qui","que","quoi","c'est","j'ai","il","elle","ils","elles","on","nous","vous","veux","cherche","voudrais","besoin","d'un","d'une"];
+  return query.toLowerCase()
+    .replace(/['']/g,"'")
+    .split(/[\s,;.!?]+/)
+    .map(w=>w.trim())
+    .filter(w=>w.length>2 && !stopwords.includes(w));
+}
+
+async function searchProducts(query){
+  const products=await fetchProducts();
+  const tokens=tokenize(query);
+  if(!tokens.length) return [];
+  const scored=products
+    .map(p=>({...p,score:scoreProduct(p,tokens)}))
+    .filter(p=>p.score>0)
+    .sort((a,b)=>b.score-a.score)
+    .slice(0,4);
+  return scored;
+}
+
+// ─────────────────────────────────────────────
+// UI HELPERS
+// ─────────────────────────────────────────────
+function msg(html,who,mood,delay=0){
+  const c=document.getElementById("msgs");
+  if(delay>0){setTimeout(()=>msg(html,who,mood,0),delay);return;}
+  const d=document.createElement("div");d.className="msg "+who;
+  d.innerHTML='<div class="bbl">'+html+'</div>';
+  c.appendChild(d);c.scrollTop=c.scrollHeight;
+}
+
+function choices(opts,cb){
+  const c=document.getElementById("msgs");
+  const w=document.createElement("div");w.className="choices";
+  opts.forEach(o=>{
+    const b=document.createElement("button");b.className="cbtn";b.textContent=o.l;
+    b.onclick=()=>{
+      w.querySelectorAll(".cbtn").forEach(x=>{x.disabled=true;x.style.opacity=".4"});
+      b.style.opacity="1";b.style.background="var(--black)";b.style.color="var(--white)";
+      setTimeout(()=>cb(o.v),200);
+    };
+    w.appendChild(b);
+  });
+  c.appendChild(w);c.scrollTop=c.scrollHeight;
+}
+
+function showProductCards(products){
+  const c=document.getElementById("msgs");
+  const wrap=document.createElement("div");wrap.className="product-cards";
+  if(!products.length){
+    const d=document.createElement("div");d.className="no-results";
+    d.textContent="Aucun résultat pour cette recherche 😕";
+    wrap.appendChild(d);
+  } else {
+    products.forEach(p=>{
+      const card=document.createElement("div");card.className="pcard";
+      card.innerHTML=`
+        <div class="pcard-emoji">${p.emoji}</div>
+        <div class="pcard-info">
+          <div class="pcard-name">${p.name}</div>
+          <div class="pcard-meta">${p.category} · ${(p.colors||[]).slice(0,3).join(", ")}</div>
+        </div>
+        <div class="pcard-price">
+          ${p.price_label||"Voir prix"}
+          <small>/ pièce</small>
+        </div>
+      `;
+      card.onclick=()=>{
+        msg("Je veux voir <strong>"+p.name+"</strong> 👀","user");
+        setTimeout(()=>{
+          cta(
+            "Super choix ! 🔥 Clique ci-dessous pour configurer le <strong>"+p.name+"</strong>, uploader ton logo et voir le prix en temps réel.",
+            "Voir le produit →",
+            "https://goods-b2b.myshopify.com/products/"+p.handle
+          );
+          setTimeout(()=>restart(),3500);
+        },600);
+      };
+      wrap.appendChild(card);
+    });
+  }
+  c.appendChild(wrap);c.scrollTop=c.scrollHeight;
+}
+
+function typing(){
+  const c=document.getElementById("msgs");
+  const d=document.createElement("div");d.className="typing-row";
+  d.id="typing";d.innerHTML='<div class="ti"><span></span><span></span><span></span></div>';
+  c.appendChild(d);c.scrollTop=c.scrollHeight;
+}
+
+function clearTyping(){const t=document.getElementById("typing");if(t)t.remove();}
+
+function cta(text,link,url){
+  const c=document.getElementById("msgs");
+  setTimeout(()=>{
+    const d=document.createElement("div");d.className="msg bot";
+    d.innerHTML='<div class="cta">'+text+'<br><a href="'+(url||'#')+'" target="_blank">'+link+'</a></div>';
+    c.appendChild(d);c.scrollTop=c.scrollHeight;
+  },1500);
+}
+
+function restart(){
+  setTimeout(()=>{
+    msg("Autre chose que je peux faire pour toi ? Je suis là 😊","bot","welcome",0);
+    state={sector:null,qty:null};
+    choices([
+      {l:"🔥 Nouveau projet",v:"projet"},{l:"⏱ Délais",v:"delais"},
+      {l:"💸 Prix",v:"prix"},{l:"🔍 Chercher un produit",v:"search"},
+      {l:"📦 Suivi colis",v:"suivi"},{l:"🤔 Comment ça marche",v:"howto"}
+    ],step);
+  },1000);
+}
+
+// ─────────────────────────────────────────────
+// SUIVI COLIS UPS
+// ─────────────────────────────────────────────
+function stepUPS(){
+  msg("Donne-moi ton numéro de suivi UPS et je t'envoie le lien direct 📦","bot","thinking",0);
+  const c=document.getElementById("msgs");
+  const inp=document.getElementById("inp");
+  const origPlaceholder=inp.placeholder;
+  inp.placeholder="Ex: 1Z999AA10123456784";
+  // Flag pour intercepter le prochain envoi
+  window._upsMode=true;
+  inp.placeholder="Ton numéro UPS ici...";
+}
+
+function handleUPS(tracknum){
+  const clean=tracknum.trim().replace(/\s/g,"");
+  const url="https://www.ups.com/track?tracknum="+clean+"&requester=WT/trackdetails";
+  msg("C'est parti ! Voilà le lien de suivi pour <strong>"+clean+"</strong> 📦","bot","pointing",0);
+  setTimeout(()=>{
+    cta("Clique ci-dessous pour tracker ton colis en temps réel 👇","Suivre mon colis UPS →",url);
+    setTimeout(()=>restart(),3500);
+  },600);
+}
+
+// ─────────────────────────────────────────────
+// FLUX PRINCIPAL
+// ─────────────────────────────────────────────
+function step(s){
+  if(s==="projet"){
+    msg("Oh trop bien, raconte ! C'est quoi le projet aujourd'hui ? 👀<br>T'es dans quel univers ?","bot","excited",0);
+    choices([
+      {l:"☕ Food & Café",v:"food"},{l:"✨ Beauté & Bien-être",v:"beauté"},
+      {l:"🛍 Lifestyle & DNVB",v:"lifestyle"},{l:"🏨 Hôtel & Restaurant",v:"hospitality"},
+      {l:"👕 Textile & Mode",v:"textile"},{l:"Autre chose",v:"autre"}
+    ],sector=>{state.sector=sector;stepQty(sector);});
+  }
+  else if(s==="delais"){
+    msg("Bonne question ! Voilà les délais selon la technique 👇","bot","thinking",0);
+    setTimeout(()=>{
+      let list=Object.entries(DELAYS).map(([k,v])=>'✅ <strong>'+k+'</strong> — '+v).join("<br>");
+      msg(list+"<br><br>📦 Sans impression : <strong>4–5 jours chrono</strong> !","bot","pointing",300);
+      setTimeout(()=>restart(),3500);
+    },800);
+  }
+  else if(s==="howto"){
+    msg("C'est vraiment simple, promis 😎<br><br>1️⃣ Tu choisis tes produits — on a fait le tri pour toi<br>2️⃣ Tu uploades ton logo, tu choisis ta technique<br>3️⃣ Tu vois le prix en temps réel, zéro surprise<br>4️⃣ Tu commandes direct sur la boutique 🚀<br><br>Pas de catalogue immense, pas de devis, pas d'attente !","bot","pointing",0);
+    setTimeout(()=>restart(),3500);
+  }
+  else if(s==="prix"){
+    msg("Alors le prix ça va dépendre de plusieurs choses 👇<br><br>💡 Le produit que tu choisis<br>📦 Ta quantité<br>🖨️ La technique de marquage (sérigraphie, broderie, laser...)<br><br>Le prix s'affiche en temps réel sur la boutique — tu vois direct ce que ça coûte 🙌 Et pas de minimum de commande !","bot","thinking",0);
+    setTimeout(()=>{cta("Go voir les produits et les prix en direct 👇","Voir la boutique →","https://goods-b2b.myshopify.com");setTimeout(()=>restart(),3000);},1200);
+  }
+  else if(s==="suivi"){
+    stepUPS();
+  }
+  else if(s==="search"){
+    msg("Ok, tu cherches quoi exactement ? Décris le produit — type, couleur, usage… 🔍<br><br>Ex: <em>\"une trousse léopard\"</em>, <em>\"mug pour café\"</em>, <em>\"tote bag noir premium\"</em>","bot","thinking",0);
+    window._searchMode=true;
+    document.getElementById("inp").placeholder="Décris le produit...";
+  }
+}
+
+function stepQty(sector){
+  const r={
+    food:"Un coffee shop c'est top ça, je peux venir ?! ☕😄<br>T'as une idée des quantités ?",
+    beauté:"Oh j'adore ! Une marque beauté c'est tellement stylé ✨<br>T'as une idée des quantités ?",
+    lifestyle:"Lifestyle c'est mon univers préféré 🛍️ Trop hâte de voir ce qu'on crée !<br>T'as une idée des quantités ?",
+    hospitality:"Waaait un hôtel ou un resto ?! Trop cool 🏨<br>T'as une idée des quantités ?",
+    textile:"Mode & textile, on adore 👕 Ça va être beau c'est sûr !<br>T'as une idée des quantités ?",
+    autre:"Oh super, j'adore découvrir de nouveaux projets ! 🎉<br>T'as une idée des quantités ?"
+  };
+  msg(r[sector]||r.autre,"bot","excited",0);
+  choices([
+    {l:"Moins de 50 pièces",v:"petit"},{l:"50 à 500 pièces",v:"moyen"},
+    {l:"500 pièces et +",v:"grand"},{l:"Pas encore d'idée",v:"nsp"}
+  ],qty=>{state.qty=qty;stepNeed();});
+}
+
+function stepNeed(){
+  msg("Et c'est pour quoi comme occasion ? 🎯","bot","thinking",0);
+  choices([
+    {l:"🎬 Lancement de marque",v:"launch"},{l:"🎪 Activation / événement",v:"event"},
+    {l:"❤️ Merch communauté",v:"community"},{l:"📦 Packaging produit",v:"packaging"},
+    {l:"🎁 Kit presse / gifting",v:"gifting"}
+  ],()=>showRec());
+}
+
+function showRec(){
+  const r=RECS[state.sector]||RECS.autre;
+  const prods=r.products.map(p=>"✦ "+p).join("<br>");
+  msg("Ok j'ai exactement ce qu'il te faut, j'adore ce projet 🔥<br><br>Pour une marque <strong>"+r.label+"</strong>, voilà ce qui cartonne :<br><br>"+prods+"<br><br>Tout est dispo direct sur la boutique — tu choisis, tu configures, tu commandes 💪","bot","pointing",0);
+  setTimeout(()=>{cta("Go jeter un œil, tout est dispo en ligne 👇","Voir la boutique →","https://goods-b2b.myshopify.com");setTimeout(()=>restart(),3500);},900);
+}
+
+// ─────────────────────────────────────────────
+// GESTION DE L'INPUT
+// ─────────────────────────────────────────────
+async function send(){
+  const el=document.getElementById("inp");
+  const t=el.value.trim();if(!t)return;
+  el.value="";
+  msg(t,"user");
+
+  // Mode suivi UPS
+  if(window._upsMode){
+    window._upsMode=false;
+    el.placeholder="Ex: je cherche une trousse léopard…";
+    handleUPS(t);
+    return;
+  }
+
+  // Mode recherche produit
+  if(window._searchMode){
+    window._searchMode=false;
+    el.placeholder="Ex: je cherche une trousse léopard…";
+    typing();
+    const results=await searchProducts(t);
+    clearTyping();
+    if(results.length>0){
+      msg("J'ai trouvé "+results.length+" produit"+(results.length>1?"s":"")+" qui correspond"+(results.length>1?"nt":"")+" 🎯","bot","pointing",0);
+      showProductCards(results);
+      setTimeout(()=>{
+        msg("Tu vois quelque chose qui t'intéresse ? Clique sur un produit pour le voir sur la boutique 👆","bot","thinking",800);
+        setTimeout(()=>restart(),4000);
+      },600);
+    } else {
+      msg("Hmm, j'ai pas trouvé de produit exact pour ça 😅 Essaie avec d'autres mots, ou jette un œil au catalogue complet !","bot","thinking",0);
+      setTimeout(()=>{cta("Voir tous les produits disponibles 👇","Voir le catalogue →","https://goods-b2b.myshopify.com");setTimeout(()=>restart(),3000);},600);
+    }
+    return;
+  }
+
+  // Détection automatique recherche produit dans le texte libre
+  const l=t.toLowerCase();
+  if(isProductSearch(l)){
+    typing();
+    const results=await searchProducts(t);
+    clearTyping();
+    if(results.length>0){
+      msg("Ah je vois ce que tu cherches ! 🔍 Voilà ce qu'on a :","bot","pointing",0);
+      showProductCards(results);
+      setTimeout(()=>{
+        msg("Clique sur un produit pour l'ouvrir sur la boutique et configurer ton marquage 👆","bot","thinking",800);
+        setTimeout(()=>restart(),4000);
+      },600);
+    } else {
+      msg("Hmm, pas de résultat exact pour ça 😅 Essaie autrement ou parcoure le catalogue !","bot","thinking",0);
+      setTimeout(()=>{cta("Voir tous les produits 👇","Voir la boutique →","https://goods-b2b.myshopify.com");setTimeout(()=>restart(),3000);},600);
+    }
+    return;
+  }
+
+  // Routing classique par mots-clés
+  if(l.includes("délai")||l.includes("livrai"))step("delais");
+  else if(l.includes("prix")||l.includes("coût")||l.includes("combien"))step("prix");
+  else if(l.includes("comment")||l.includes("marche")||l.includes("process"))step("howto");
+  else if(l.includes("merch")||l.includes("projet")||l.includes("lancer"))step("projet");
+  else if(l.includes("suivi")||l.includes("colis")||l.includes("ups")||l.includes("tracking"))step("suivi");
+  else if(l.includes("coffee")||l.includes("café")||l.includes("food")||l.includes("boulangerie")){state.sector="food";stepQty("food");}
+  else if(l.includes("beauté")||l.includes("cosméti")){state.sector="beauté";stepQty("beauté");}
+  else if(l.includes("hôtel")||l.includes("hotel")||l.includes("resto")){state.sector="hospitality";stepQty("hospitality");}
+  else{
+    msg("Hmm je suis pas sûr de saisir 😅 Mais dis-moi ce dont t'as besoin et on trouve ensemble !","bot","thinking",0);
+    choices([
+      {l:"🔥 Lancer un projet",v:"projet"},{l:"⏱ Délais",v:"delais"},
+      {l:"💸 Prix",v:"prix"},{l:"🔍 Chercher un produit",v:"search"},
+      {l:"📦 Suivi colis",v:"suivi"}
+    ],step);
+  }
+}
+
+document.getElementById("inp").addEventListener("keydown",e=>{if(e.key==="Enter")send();});
+
+// ─────────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────────
+msg("Hello toi ! 👋 Moi c'est Goodo, je suis là pour t'aider à trouver le merch parfait pour ta marque.<br><br>Dis-moi, comment je peux t'aider ? 😊","bot","welcome",0);
+choices([
+  {l:"🔥 J'ai un projet merch",v:"projet"},{l:"⏱ C'est quoi les délais ?",v:"delais"},
+  {l:"🤔 Comment ça marche ?",v:"howto"},{l:"💸 Ça coûte combien ?",v:"prix"},
+  {l:"🔍 Chercher un produit",v:"search"},{l:"📦 Suivi colis",v:"suivi"}
+],step);
+</script>
+</body>
+</html>
