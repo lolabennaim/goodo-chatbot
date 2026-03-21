@@ -7,6 +7,11 @@ app.use(cors());
 // Sert les fichiers statiques depuis la racine du repo
 app.use(express.static(path.join(__dirname)));
 
+// Route /chatbot → sert le fichier HTML du chatbot
+app.get('/chatbot', (req, res) => {
+  res.sendFile(path.join(__dirname, 'goods-chatbot.html'));
+});
+
 app.get('/chatbot/products', async (req, res) => {
   try {
     const domain = process.env.SHOPIFY_DOMAIN;
