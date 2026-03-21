@@ -13,7 +13,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);display:flex;align
 .wrap{
   width:100%;max-width:460px;background:var(--white);
   border-radius:24px;box-shadow:0 8px 60px rgba(0,0,0,.10);
-  overflow:hidden;display:flex;flex-direction:column;height:680px;
+  overflow:hidden;display:flex;flex-direction:column;height:580px;
   position:relative;
 }
 
@@ -392,6 +392,69 @@ function stepUPS(){
 
 function handleUPS(tracknum){
   const clean=tracknum.trim().replace(/\s/g,"");
+  const l=clean.toLowerCase();
+
+  // Cas : le client n'a pas son numéro
+  const pasDNumero=["pas","sais","trouve","trouver","perdu","où","comment","aucun","j'ai pas","j ai pas","non","aucune idée"];
+  if(pasDNumero.some(k=>l.includes(k)) || clean.length < 8){
+    msg("Pas de souci ! Voici où trouver ton numéro de suivi UPS 👇<br><br>📧 <strong>Email de confirmation</strong> — cherche un email de GOODS avec l'objet \"Votre commande est expédiée\", le numéro commence par <strong>1Z</strong><br><br>👤 <strong>Espace compte</strong> — connecte-toi sur la boutique → Mes commandes → le numéro est affiché sur ta commande","bot","thinking",0);
+    setTimeout(()=>{
+      choices([
+        {l:"J'ai trouvé mon numéro 🎉",v:"ups_retry"},
+        {l:"Je trouve toujours pas 😕",v:"ups_contact"}
+      ],s=>{
+        if(s==="ups_retry"){
+          msg("Super ! Colle-le ici 👇","bot","excited",0);
+          window._upsMode=true;
+          document.getElementById("inp").placeholder="Ton numéro UPS ici...";
+        } else {
+          msg("Pas de problème, notre équipe va t'aider directement 🙌","bot","thinking",0);
+          setTimeout(()=>{
+            cta("Contacte-nous et on retrouve ton colis ensemble 👇","Écrire à contact@gogoods.fr →","mailto:contact@gogoods.fr");
+            setTimeout(()=>restart(),3500);
+          },600);
+        }
+      });
+    },800);
+    return;
+  }
+
+  // Cas : numéro UPS invalide (doit commencer par 1Z et faire 18 chars)
+  if(!clean.toUpperCase().startsWith("1Z") || clean.length < 16){
+    msg("Hmm, ce numéro me semble pas correct 🤔<br><br>Un numéro UPS commence toujours par <strong>1Z</strong> et fait 18 caractères.<br>Ex: <em>1Z999AA10123456784</em><br><br>Tu veux réessayer ?","bot","thinking",0);
+    setTimeout(()=>{
+      choices([
+        {l:"Réessayer avec un autre numéro",v:"ups_retry"},
+        {l:"Je retrouve pas mon numéro",v:"ups_nofound"}
+      ],s=>{
+        if(s==="ups_retry"){
+          msg("Ok, colle ton numéro ici 👇","bot","excited",0);
+          window._upsMode=true;
+          document.getElementById("inp").placeholder="Ton numéro UPS ici...";
+        } else {
+          msg("Voici où le trouver 👇<br><br>📧 <strong>Email de confirmation</strong> — objet \"Votre commande est expédiée\"<br>👤 <strong>Espace compte</strong> → Mes commandes","bot","thinking",0);
+          setTimeout(()=>{
+            choices([
+              {l:"J'ai trouvé 🎉",v:"ups_retry"},
+              {l:"Contacter le SAV",v:"ups_contact"}
+            ],s2=>{
+              if(s2==="ups_retry"){
+                msg("Super, colle-le ici 👇","bot","excited",0);
+                window._upsMode=true;
+                document.getElementById("inp").placeholder="Ton numéro UPS ici...";
+              } else {
+                cta("Notre équipe va t'aider 🙌","Écrire à contact@gogoods.fr →","mailto:contact@gogoods.fr");
+                setTimeout(()=>restart(),3500);
+              }
+            });
+          },600);
+        }
+      });
+    },600);
+    return;
+  }
+
+  // Numéro valide → lien UPS
   const url="https://www.ups.com/track?tracknum="+clean+"&requester=WT/trackdetails";
   msg("C'est parti ! Voilà le lien de suivi pour <strong>"+clean+"</strong> 📦","bot","pointing",0);
   setTimeout(()=>{
@@ -530,13 +593,25 @@ async function send(){
   if(l.includes("délai")||l.includes("livrai"))step("delais");
   else if(l.includes("prix")||l.includes("coût")||l.includes("combien"))step("prix");
   else if(l.includes("comment")||l.includes("marche")||l.includes("process"))step("howto");
-  else if(l.includes("merch")||l.includes("projet")||l.includes("lancer"))step("projet");
-  else if(l.includes("suivi")||l.includes("colis")||l.includes("ups")||l.includes("tracking"))step("suivi");
-  else if(l.includes("coffee")||l.includes("café")||l.includes("food")||l.includes("boulangerie")){state.sector="food";stepQty("food");}
-  else if(l.includes("beauté")||l.includes("cosméti")){state.sector="beauté";stepQty("beauté");}
-  else if(l.includes("hôtel")||l.includes("hotel")||l.includes("resto")){state.sector="hospitality";stepQty("hospitality");}
+  else if(l.includes("merch")||l.includes("projet")||l.includes("lancer")||l.includes("créer ma marque")||l.includes("monter"))step("projet");
+  else if(l.includes("suivi")||l.includes("colis")||l.includes("ups")||l.includes("tracking")||l.includes("livraison"))step("suivi");
+  // Détection contexte métier → lance directement le bon secteur
+  else if(l.includes("coffee")||l.includes("café")||l.includes("cafet")||l.includes("food")||l.includes("boulangerie")||l.includes("boucherie")||l.includes("traiteur")||l.includes("restaurant")||l.includes("épicerie")){state.sector="food";stepQty("food");}
+  else if(l.includes("beauté")||l.includes("cosméti")||l.includes("cosmetic")||l.includes("soin")||l.includes("cheveu")||l.includes("capillaire")||l.includes("skincare")||l.includes("makeup")||l.includes("maquillage")||l.includes("parfum")||l.includes("bien-être")||l.includes("bienetre")||l.includes("spa")||l.includes("massage")){state.sector="beauté";stepQty("beauté");}
+  else if(l.includes("hôtel")||l.includes("hotel")||l.includes("resto")||l.includes("hospitality")||l.includes("chambre")||l.includes("auberge")||l.includes("gîte")){state.sector="hospitality";stepQty("hospitality");}
+  else if(l.includes("mode")||l.includes("textile")||l.includes("vêtement")||l.includes("vetement")||l.includes("fringue")||l.includes("tshirt")||l.includes("t-shirt")||l.includes("collection")){state.sector="textile";stepQty("textile");}
+  else if(l.includes("lifestyle")||l.includes("dnvb")||l.includes("marque en ligne")||l.includes("e-commerce")||l.includes("ecommerce")||l.includes("community")||l.includes("communauté")){state.sector="lifestyle";stepQty("lifestyle");}
+  // Détection intention projet générique
+  else if(l.includes("marque")||l.includes("startup")||l.includes("boîte")||l.includes("boite")||l.includes("entreprise")||l.includes("société")||l.includes("asso")||l.includes("association")||l.includes("event")||l.includes("événement")||l.includes("lancement")){
+    msg("Oh trop bien, j'adore ! 🔥 C'est quoi ton univers ?","bot","excited",0);
+    choices([
+      {l:"☕ Food & Café",v:"food"},{l:"✨ Beauté & Bien-être",v:"beauté"},
+      {l:"🛍 Lifestyle & DNVB",v:"lifestyle"},{l:"🏨 Hôtel & Restaurant",v:"hospitality"},
+      {l:"👕 Textile & Mode",v:"textile"},{l:"Autre chose",v:"autre"}
+    ],sector=>{state.sector=sector;stepQty(sector);});
+  }
   else{
-    msg("Hmm je suis pas sûr de saisir 😅 Mais dis-moi ce dont t'as besoin et on trouve ensemble !","bot","thinking",0);
+    msg("Haha je suis un assistant spécialisé merch, pas un génie universel 😄<br><br>Mais pour tout ce qui touche à tes produits personnalisés, je suis <strong>vraiment</strong> là pour toi 💪","bot","thinking",0);
     choices([
       {l:"🔥 Lancer un projet",v:"projet"},{l:"⏱ Délais",v:"delais"},
       {l:"💸 Prix",v:"prix"},{l:"🔍 Chercher un produit",v:"search"},
